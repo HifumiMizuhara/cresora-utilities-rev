@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "cresora-utilities",
+	"version": "${version}",
+	"name": "Cresora Utilities",
+	"description": "A utility mod for Minecraft 26.2 built on the Fabric toolchain.",
+	"authors": [
+		"Cresora"
+	],
+	"contact": {},
+	"license": "All-Rights-Reserved",
+	"icon": "assets/cresora-utilities/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.cresora.utilities.CresoraUtilities"
+		],
+		"client": [
+			"com.cresora.utilities.client.CresoraUtilitiesClient"
+		]
+	},
+	"mixins": [
+		"cresora-utilities.mixins.json",
+		{
+			"config": "cresora-utilities.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
