@@ -7,7 +7,14 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cresora.utilities.net.WeaponNetwork;
 import com.cresora.utilities.registry.ModItems;
+import com.cresora.utilities.skill.WeaponSkillRegistry;
+import com.cresora.utilities.weapon.WeaponAttributeService;
+import com.cresora.utilities.weapon.WeaponContentRegistry;
+import com.cresora.utilities.weapon.WeaponInventoryAttachments;
+import com.cresora.utilities.weapon.WeaponInventoryService;
+import com.cresora.utilities.weapon.WeaponSkillService;
 
 /**
  * Common (both client and dedicated server) entrypoint of Cresora Utilities.
@@ -37,7 +44,17 @@ public class CresoraUtilities implements ModInitializer {
 		LOGGER.info("Initialising {}", MOD_NAME);
 
 		// Register content. Add further registry classes here as the mod grows.
+		ModDataComponents.initialize();
+		WeaponContentRegistry.init();
 		ModItems.initialize();
+
+		// Weapon runtime services.
+		WeaponSkillRegistry.initialize();
+		WeaponSkillService.init();
+		WeaponInventoryAttachments.initialize();
+		WeaponInventoryService.init();
+		WeaponAttributeService.init();
+		WeaponNetwork.initialize();
 	}
 
 	/**

@@ -35,6 +35,43 @@ dependencies {
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
+// Build-time DSL compiler. Lives in its own source set so it never ends up in the mod jar.
+sourceSets {
+	compiler {
+	}
+	compilerTest {
+		compileClasspath += sourceSets.compiler.output
+		runtimeClasspath += sourceSets.compiler.output
+	}
+}
+
+dependencies {
+	compilerImplementation 'com.google.code.gson:gson:2.11.0'
+	compilerTestImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	compilerTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+configurations {
+	compilerTestImplementation.extendsFrom compilerImplementation
+}
+
+dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') { useJUnitPlatform() }
+
+tasks.register('compilerTest', Test) {
+	group = 'cresora'
+	description = 'Unit tests for the Cresora weapon DSL compiler'
+	testClassesDirs = sourceSets.compilerTest.output.classesDirs
+	classpath = sourceSets.compilerTest.runtimeClasspath
+	useJUnitPlatform()
+}
+
+tasks.named('check') { dependsOn 'compilerTest' }
+
 processResources {
 	def version = project.version
 	inputs.property "version", version
