@@ -21,15 +21,44 @@ public record WeaponDefinition(
 		double maxAllDamageBonusPercent,
 		double hpBonusPercent,
 		CombatDamageType damageType,
-		WeaponRole role,
+		WeaponZone zone,
 		List<WeaponAttackCurvePoint> attackCurve,
-		WeaponSkillDefinition skill,
+		List<WeaponSkillDefinition> skills,
 		WeaponUpgradeDefinition upgrades,
 		WeaponCraftDefinition craft,
 		WeaponDropDefinition drops,
 		Integer customModelData,
 		WeaponSpiritDefinition spirit
 ) {
+	public WeaponDefinition {
+		skills = (skills == null || skills.isEmpty()) ? List.of(WeaponSkillDefinition.NONE) : List.copyOf(skills);
+	}
+
+	/** The weapon's primary skill (slot 1). Never {@code null}. */
+	public WeaponSkillDefinition skill() {
+		return skills.get(0);
+	}
+
+	/** The skill in the given slot, or {@code null} when the weapon has no such slot. */
+	public WeaponSkillDefinition skill(int slot) {
+		return slot >= 0 && slot < skills.size() ? skills.get(slot) : null;
+	}
+
+	/**
+	 * Resolves the skill a skill key should fire. A weapon with a single skill always returns it,
+	 * so any skill key works; otherwise the skill in the exact slot is returned (or {@code null}).
+	 */
+	public WeaponSkillDefinition skillForSlot(int slot) {
+		if (skills.size() == 1) {
+			return skills.get(0);
+		}
+		return skill(slot);
+	}
+
+	public int skillCount() {
+		return skills.size();
+	}
+
 	public String translationKey() {
 		return "item.cresora-utilities." + id;
 	}
@@ -40,8 +69,8 @@ public record WeaponDefinition(
 
 	public static final WeaponDefinition DUMMY = new WeaponDefinition(
 			"dummy", "minecraft:air", 0.0, 0.0, 0.0, 1, 1,
-			0.0, 0.0, 0.0, CombatDamageType.PHYSICAL, WeaponRole.GUARD, List.of(),
-			WeaponSkillDefinition.of("none", 0, 0, 0.0, 0.0),
+			0.0, 0.0, 0.0, CombatDamageType.PHYSICAL, WeaponZone.MAIN_WEAPON, List.of(),
+			List.of(WeaponSkillDefinition.of("none", 0, 0, 0.0, 0.0)),
 			WeaponUpgradeDefinition.of(0, 0, 0),
 			new WeaponCraftDefinition("dummy", "air", 0, WeaponRarity.TWO_STAR, 1, 1),
 			new WeaponDropDefinition(new WeaponFragmentDropDefinition(0, 0.0, 0, 0, 0), List.of(), 0.0, 0.0),
@@ -64,7 +93,7 @@ public record WeaponDefinition(
 		private final double totalAttackSpeed;
 		private final int maxBaseLevel;
 		private final int maxSkillLevel;
-		private final WeaponSkillDefinition skill;
+		private List<WeaponSkillDefinition> skills;
 		private final WeaponUpgradeDefinition upgrades;
 		private final WeaponCraftDefinition craft;
 		private final WeaponDropDefinition drops;
@@ -72,7 +101,7 @@ public record WeaponDefinition(
 		private double maxAllDamageBonusPercent = 0.0;
 		private double hpBonusPercent = 0.0;
 		private CombatDamageType damageType = CombatDamageType.PHYSICAL;
-		private WeaponRole role = WeaponRole.GUARD;
+		private WeaponZone zone = WeaponZone.MAIN_WEAPON;
 		private List<WeaponAttackCurvePoint> attackCurve = List.of();
 		private Integer customModelData = null;
 		private WeaponSpiritDefinition spirit = null;
@@ -89,7 +118,7 @@ public record WeaponDefinition(
 			this.totalAttackSpeed = totalAttackSpeed;
 			this.maxBaseLevel = maxBaseLevel;
 			this.maxSkillLevel = maxSkillLevel;
-			this.skill = skill;
+			this.skills = (skill == null) ? List.of(WeaponSkillDefinition.NONE) : List.of(skill);
 			this.upgrades = upgrades;
 			this.craft = craft;
 			this.drops = drops;
@@ -115,13 +144,19 @@ public record WeaponDefinition(
 			return this;
 		}
 
-		public Builder role(WeaponRole value) {
-			this.role = value;
+		public Builder zone(WeaponZone value) {
+			this.zone = value;
 			return this;
 		}
 
 		public Builder attackCurve(List<WeaponAttackCurvePoint> value) {
 			this.attackCurve = value;
+			return this;
+		}
+
+		/** Replaces the skill slots (by default the single skill passed to the factory). */
+		public Builder skills(List<WeaponSkillDefinition> value) {
+			this.skills = value;
 			return this;
 		}
 
@@ -138,7 +173,7 @@ public record WeaponDefinition(
 		public WeaponDefinition build() {
 			return new WeaponDefinition(id, baseItemId, baseAttackDamage, attackDamagePerLevel, totalAttackSpeed,
 					maxBaseLevel, maxSkillLevel, critRateBonusPercent, maxAllDamageBonusPercent, hpBonusPercent,
-					damageType, role, attackCurve, skill, upgrades, craft, drops, customModelData, spirit);
+					damageType, zone, attackCurve, skills, upgrades, craft, drops, customModelData, spirit);
 		}
 	}
 }

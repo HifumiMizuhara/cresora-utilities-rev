@@ -41,6 +41,7 @@ public class CresoraWeaponItem extends Item {
 		if (!(player instanceof ServerPlayer serverPlayer)) {
 			return InteractionResult.FAIL;
 		}
-		return WeaponSkillService.tryActivate(serverPlayer, player.getItemInHand(hand));
+		// Right-clicking the weapon fires its primary skill (skill slot 0).
+		return WeaponSkillService.tryActivate(serverPlayer, player.getItemInHand(hand), 0);
 	}
 }

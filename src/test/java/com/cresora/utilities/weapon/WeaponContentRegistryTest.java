@@ -29,9 +29,43 @@ class WeaponContentRegistryTest {
 		assertEquals("minecraft:wooden_sword", rondo.baseItemId());
 		assertEquals("shield", rondo.skill().effectId());
 		assertEquals(15, rondo.skill().durationSeconds());
-		assertEquals(WeaponRole.GUARD, rondo.role());
+		assertEquals(WeaponZone.SUPPORT, rondo.zone());
 		assertEquals(CombatDamageType.PHYSICAL, rondo.damageType());
 		assertEquals("item.cresora-utilities.rondo_melody", rondo.translationKey());
+	}
+
+	@Test
+	void singleSkillWeaponResolvesForAnySkillSlot() {
+		WeaponDefinition rondo = WeaponContentRegistry.requireWeapon("rondo_melody");
+		assertEquals(1, rondo.skillCount());
+		assertEquals("shield", rondo.skillForSlot(0).effectId());
+		// A weapon with a single skill fires it from any skill key.
+		assertEquals("shield", rondo.skillForSlot(2).effectId());
+	}
+
+	@Test
+	void everyWeaponIsTaggedWithItsZone() {
+		assertEquals(WeaponZone.SUPPORT, WeaponContentRegistry.requireWeapon("rondo_melody").zone());
+		assertEquals(WeaponZone.HEAL, WeaponContentRegistry.requireWeapon("masquerade_invitation").zone());
+		assertEquals(WeaponZone.SUPPORT, WeaponContentRegistry.requireWeapon("pastoral_flute_reverie").zone());
+		assertEquals(WeaponZone.SUPPORT, WeaponContentRegistry.requireWeapon("requiem_toward_dawn").zone());
+		assertEquals(WeaponZone.HEAL, WeaponContentRegistry.requireWeapon("gaoshan_liushui").zone());
+		assertEquals(WeaponZone.SUPPORT, WeaponContentRegistry.requireWeapon("cadenza_allegro").zone());
+		assertEquals(WeaponZone.MAIN_WEAPON, WeaponContentRegistry.requireWeapon("lakeside_stride").zone());
+		assertEquals(WeaponZone.SUPPORT, WeaponContentRegistry.requireWeapon("kyokusui_no_ryusho").zone());
+		assertEquals(WeaponZone.SUB_WEAPON, WeaponContentRegistry.requireWeapon("hanwu_juanxue").zone());
+		assertEquals(WeaponZone.SUB_WEAPON, WeaponContentRegistry.requireWeapon("dark_lux").zone());
+	}
+
+	@Test
+	void zoneMapsToWeaponBarSlot() {
+		assertEquals(0, WeaponZone.MAIN_WEAPON.slot());
+		assertEquals(1, WeaponZone.SUB_WEAPON.slot());
+		assertEquals(2, WeaponZone.SUPPORT.slot());
+		assertEquals(3, WeaponZone.HEAL.slot());
+		assertEquals(WeaponZone.MAIN_WEAPON, WeaponZone.forSlot(0));
+		assertEquals(WeaponZone.HEAL, WeaponZone.forSlot(3));
+		assertNull(WeaponZone.forSlot(4));
 	}
 
 	@Test

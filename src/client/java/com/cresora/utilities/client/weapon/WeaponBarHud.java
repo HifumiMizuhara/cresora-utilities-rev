@@ -1,11 +1,17 @@
 package com.cresora.utilities.client.weapon;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.cresora.utilities.CresoraUtilities;
+import com.cresora.utilities.client.combat.CombatStateClient;
 import com.cresora.utilities.weapon.WeaponData;
 import com.cresora.utilities.weapon.WeaponDefinition;
 import com.cresora.utilities.weapon.WeaponInventory;
 import com.cresora.utilities.weapon.WeaponRarity;
+import com.cresora.utilities.weapon.WeaponSkillDefinition;
 import com.cresora.utilities.weapon.WeaponStackSupport;
+import com.cresora.utilities.weapon.WeaponZone;
 
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.minecraft.client.DeltaTracker;
@@ -99,22 +105,41 @@ public final class WeaponBarHud implements HudElement {
 		int activeSlotY = MARGIN + HEADER_HEIGHT + 2 + selected * (SLOT_SIZE + SLOT_GAP);
 		int flyoutX = MARGIN + BAR_WIDTH + 4;
 		int flyoutY = activeSlotY - 2;
-		int flyoutH = 26;
 
 		ItemStack activeStack = inventory.equipped(selected);
 		WeaponDefinition activeDef = WeaponStackSupport.getDefinition(activeStack);
 		WeaponData activeData = (activeDef != null && !activeStack.isEmpty()) ? WeaponStackSupport.getWeaponData(activeStack) : null;
+
+		WeaponZone selectedZone = WeaponZone.forSlot(selected);
+		String zoneName = selectedZone == null ? "" : net.minecraft.network.chat.Component.translatable(selectedZone.translationKey()).getString();
+		int zoneColor = WeaponUiTheme.zoneColor(selectedZone);
 
 		if (!activeStack.isEmpty() && activeData != null) {
 			WeaponRarity activeRarity = activeData.rarity();
 			int rColor = WeaponUiTheme.rarityColor(activeRarity);
 			String titleText = activeStack.getHoverName().getString();
 
-			String skillName = WeaponUiTheme.formatSkillName(activeDef);
-			String subText = net.minecraft.network.chat.Component.translatable("cresora.ui.level", activeData.baseLevel(), activeDef.maxBaseLevel()).getString()
-					+ " · [R] " + skillName;
+			boolean inCombat = CombatStateClient.isInCombat(minecraft.player);
+			String statusText = net.minecraft.network.chat.Component.translatable(
+					inCombat ? "cresora.ui.combat_active" : "cresora.ui.combat_idle").getString();
+			String subText = zoneName + " · "
+					+ net.minecraft.network.chat.Component.translatable("cresora.ui.level", activeData.baseLevel(), activeDef.maxBaseLevel()).getString()
+					+ " · " + statusText;
 
+			List<String> skillLines = new ArrayList<>();
+			for (int slot = 0; slot < activeDef.skillCount(); slot++) {
+				WeaponSkillDefinition skill = activeDef.skill(slot);
+				if (skill == null || skill.effectId().equals("none")) {
+					continue;
+				}
+				skillLines.add("[" + WeaponKeybinds.skillKeyLabel(slot) + "] " + WeaponUiTheme.formatSkillName(activeDef, slot));
+			}
+
+			int flyoutH = 24 + skillLines.size() * 10 + 2;
 			int textW = Math.max(minecraft.font.width(titleText), minecraft.font.width(subText));
+			for (String line : skillLines) {
+				textW = Math.max(textW, minecraft.font.width(line));
+			}
 			int flyoutW = Math.max(120, textW + 14);
 
 			graphics.fillGradient(flyoutX, flyoutY, flyoutX + flyoutW, flyoutY + flyoutH, 0xD80A0D15, 0xE80F1522);
@@ -123,17 +148,24 @@ public final class WeaponBarHud implements HudElement {
 
 			graphics.text(minecraft.font, titleText, flyoutX + 6, flyoutY + 4, rColor, true);
 			graphics.text(minecraft.font, subText, flyoutX + 6, flyoutY + 14, 0xFF94A3B8, true);
+
+			int skillLineY = flyoutY + 25;
+			for (String line : skillLines) {
+				graphics.text(minecraft.font, line, flyoutX + 6, skillLineY, WeaponUiTheme.ACCENT_CYAN, false);
+				skillLineY += 10;
+			}
 		} else {
-			String emptyTitle = net.minecraft.network.chat.Component.translatable("cresora.ui.empty_slot").getString();
+			int flyoutH = 26;
+			String emptyTitle = zoneName;
 			String openBagHint = net.minecraft.network.chat.Component.translatable("cresora.ui.open_bag_hint").getString();
 			int textW = Math.max(minecraft.font.width(emptyTitle), minecraft.font.width(openBagHint));
 			int flyoutW = Math.max(90, textW + 14);
 
 			graphics.fillGradient(flyoutX, flyoutY, flyoutX + flyoutW, flyoutY + flyoutH, 0xD80A0D15, 0xE80F1522);
 			graphics.outline(flyoutX, flyoutY, flyoutW, flyoutH, 0x702A364E);
-			graphics.fill(flyoutX, flyoutY, flyoutX + 2, flyoutY + flyoutH, 0xFF64748B);
+			graphics.fill(flyoutX, flyoutY, flyoutX + 2, flyoutY + flyoutH, zoneColor);
 
-			graphics.text(minecraft.font, emptyTitle, flyoutX + 6, flyoutY + 4, 0xFF94A3B8, true);
+			graphics.text(minecraft.font, emptyTitle, flyoutX + 6, flyoutY + 4, zoneColor, true);
 			graphics.text(minecraft.font, openBagHint, flyoutX + 6, flyoutY + 14, 0xFF64748B, true);
 		}
 	}

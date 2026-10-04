@@ -5,7 +5,8 @@ import com.cresora.utilities.weapon.WeaponCombatSupport;
 import com.cresora.utilities.weapon.WeaponData;
 import com.cresora.utilities.weapon.WeaponDefinition;
 import com.cresora.utilities.weapon.WeaponRarity;
-import com.cresora.utilities.weapon.WeaponRole;
+import com.cresora.utilities.weapon.WeaponSkillDefinition;
+import com.cresora.utilities.weapon.WeaponZone;
 
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -92,20 +93,15 @@ public final class WeaponUiTheme {
 		return net.minecraft.network.chat.Component.translatable(rarity.translationKey()).getString();
 	}
 
-	public static int roleColor(WeaponRole role) {
-		if (role == null) {
+	public static int zoneColor(WeaponZone zone) {
+		if (zone == null) {
 			return 0xFF94A3B8;
 		}
-		return switch (role) {
-			case GUARD -> 0xFF38BDF8;
-			case VANGUARD -> 0xFFF87171;
-			case DEFENDER -> 0xFF60A5FA;
-			case SNIPER -> 0xFF34D399;
-			case CASTER -> 0xFFA78BFA;
-			case MEDIC -> 0xFF4ADE80;
-			case SUPPORTER -> 0xFFFBBF24;
-			case SPECIALIST -> 0xFFFB923C;
-			case CATALYST -> 0xFFE879F9;
+		return switch (zone) {
+			case MAIN_WEAPON -> 0xFFF87171; // Crimson
+			case SUB_WEAPON -> 0xFFA78BFA;  // Amethyst
+			case SUPPORT -> 0xFF38BDF8;     // Sky
+			case HEAL -> 0xFF4ADE80;        // Emerald
 		};
 	}
 
@@ -120,18 +116,24 @@ public final class WeaponUiTheme {
 	}
 
 	public static String formatSkillName(WeaponDefinition definition) {
-		if (definition == null || definition.skill() == null || definition.skill().effectId().equals("none")) {
+		return formatSkillName(definition, 0);
+	}
+
+	public static String formatSkillName(WeaponDefinition definition, int skillSlot) {
+		WeaponSkillDefinition skill = definition == null ? null : definition.skill(skillSlot);
+		if (skill == null || skill.effectId().equals("none")) {
 			return net.minecraft.network.chat.Component.translatable("cresora.ui.no_skill").getString();
 		}
-		String specificKey = "item.cresora-utilities." + definition.id() + ".skill";
+		String suffix = skillSlot == 0 ? "" : Integer.toString(skillSlot + 1);
+		String specificKey = "item.cresora-utilities." + definition.id() + ".skill" + suffix;
 		if (net.minecraft.locale.Language.getInstance().has(specificKey)) {
 			return net.minecraft.network.chat.Component.translatable(specificKey).getString();
 		}
-		String genericKey = "item.cresora.weapon.skill." + definition.skill().effectId();
+		String genericKey = "item.cresora.weapon.skill." + skill.effectId();
 		if (net.minecraft.locale.Language.getInstance().has(genericKey)) {
 			return net.minecraft.network.chat.Component.translatable(genericKey).getString();
 		}
-		return definition.skill().effectId().replace('_', ' ');
+		return skill.effectId().replace('_', ' ');
 	}
 
 	public static String formatSkillDescription(WeaponDefinition definition, WeaponData data) {

@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
 import com.cresora.utilities.weapon.WeaponData;
 import com.cresora.utilities.weapon.WeaponDefinition;
 import com.cresora.utilities.weapon.WeaponSkillAccess;
+import com.cresora.utilities.weapon.WeaponSkillDefinition;
 
 /**
  * Contract implemented by every weapon skill (hand-written or DSL-generated). Java port of
@@ -19,7 +20,7 @@ import com.cresora.utilities.weapon.WeaponSkillAccess;
  * to {@code InteractionResult} in 26.2's official names.
  */
 public interface WeaponSkillHandler {
-	default InteractionResult activate(ServerPlayer player, WeaponDefinition definition, WeaponData data, WeaponSkillAccess access) {
+	default InteractionResult activate(ServerPlayer player, WeaponDefinition definition, WeaponSkillDefinition skill, WeaponData data, WeaponSkillAccess access) {
 		return InteractionResult.PASS;
 	}
 

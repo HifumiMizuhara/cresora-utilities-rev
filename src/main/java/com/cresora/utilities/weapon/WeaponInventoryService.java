@@ -69,7 +69,7 @@ public final class WeaponInventoryService {
 		}
 	}
 
-	/** Equips the weapon in the given bag slot: into the first free bar slot, else onto the selected one. */
+	/** Equips the weapon in the given bag slot into the bar slot bound to its zone. */
 	public static void equipFromBag(ServerPlayer player, int bagIndex) {
 		WeaponInventory current = get(player);
 		if (bagIndex < 0 || bagIndex >= WeaponInventory.BAG_SIZE) {
@@ -79,14 +79,17 @@ public final class WeaponInventoryService {
 		if (stack.isEmpty() || !WeaponStackSupport.isWeapon(stack)) {
 			return;
 		}
+		WeaponDefinition definition = WeaponStackSupport.getDefinition(stack);
+		if (definition == null) {
+			return;
+		}
 
 		List<ItemStack> bag = new ArrayList<>(current.bag());
 		List<ItemStack> equip = new ArrayList<>(current.equip());
 
-		int target = firstEmpty(equip);
-		if (target < 0) {
-			target = current.selected();
-		}
+		// A weapon is always placed into the bar slot bound to its zone (1主 / 2副 / 3辅助 / 4治疗);
+		// the displaced weapon returns to the bag slot it came from.
+		int target = definition.zone().slot();
 		ItemStack displaced = equip.get(target);
 		equip.set(target, stack);
 		bag.set(bagIndex, displaced);
@@ -125,17 +128,22 @@ public final class WeaponInventoryService {
 		}
 	}
 
+	/** Selects the main-weapon slot, so the main weapon is the weapon in hand. */
+	public static void selectMainWeapon(ServerPlayer player) {
+		select(player, WeaponZone.MAIN_WEAPON.slot());
+	}
+
 	public static void cycleSelected(ServerPlayer player) {
 		WeaponInventory current = get(player);
 		set(player, current.withSelected(current.selected() + 1));
 	}
 
-	/** Fires the selected bar weapon's skill. */
-	public static void activateSelectedSkill(ServerPlayer player) {
+	/** Fires a skill of the selected bar weapon. */
+	public static void activateSelectedSkill(ServerPlayer player, int skillSlot) {
 		WeaponInventory current = get(player);
 		ItemStack stack = current.equipped(current.selected());
 		if (!stack.isEmpty()) {
-			WeaponSkillService.tryActivate(player, stack);
+			WeaponSkillService.tryActivate(player, stack, skillSlot);
 		}
 	}
 

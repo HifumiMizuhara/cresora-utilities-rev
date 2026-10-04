@@ -13,6 +13,7 @@ import com.cresora.utilities.weapon.WeaponCombatSupport;
 import com.cresora.utilities.weapon.WeaponData;
 import com.cresora.utilities.weapon.WeaponDefinition;
 import com.cresora.utilities.weapon.WeaponSkillAccess;
+import com.cresora.utilities.weapon.WeaponSkillDefinition;
 import com.cresora.utilities.weapon.WeaponSkillService;
 
 /**
@@ -24,12 +25,9 @@ import com.cresora.utilities.weapon.WeaponSkillService;
  */
 public final class CurrentHpTrueDamageSkill implements WeaponSkillHandler {
 	@Override
-	public InteractionResult activate(ServerPlayer player, WeaponDefinition definition, WeaponData data, WeaponSkillAccess access) {
-		WeaponSkillService.startCooldown(player, definition.id(), definition.skill().cooldownSeconds() * 20L);
-		WeaponSkillService.showCooldownBar(player, definition);
-
-		double radius = Math.max(definition.skill().radiusMeters(), 0.0);
-		double ratio = WeaponCombatSupport.currentHpTrueDamageRatio(definition, data);
+	public InteractionResult activate(ServerPlayer player, WeaponDefinition definition, WeaponSkillDefinition skill, WeaponData data, WeaponSkillAccess access) {
+		double radius = Math.max(skill.radiusMeters(), 0.0);
+		double ratio = WeaponCombatSupport.currentHpTrueDamageRatio(skill, data);
 		ServerLevel world = player.level();
 		List<Monster> targets = world.getEntitiesOfClass(Monster.class,
 				player.getBoundingBox().inflate(radius), Monster::isAlive);

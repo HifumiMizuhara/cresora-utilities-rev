@@ -7,6 +7,9 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cresora.utilities.combat.CombatAttachments;
+import com.cresora.utilities.combat.CombatService;
+import com.cresora.utilities.net.CombatNetwork;
 import com.cresora.utilities.net.WeaponNetwork;
 import com.cresora.utilities.registry.ModItems;
 import com.cresora.utilities.skill.WeaponSkillRegistry;
@@ -54,6 +57,9 @@ public class CresoraUtilities implements ModInitializer {
 		WeaponInventoryAttachments.initialize();
 		WeaponInventoryService.init();
 		WeaponAttributeService.init();
+		CombatAttachments.initialize();
+		CombatService.initialize();
+		CombatNetwork.initialize();
 		WeaponNetwork.initialize();
 	}
 

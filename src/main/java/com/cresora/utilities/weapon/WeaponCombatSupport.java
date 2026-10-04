@@ -65,22 +65,42 @@ public final class WeaponCombatSupport {
 	}
 
 	public static double skillValueHearts(WeaponDefinition definition, WeaponData data) {
-		return definition.skill().baseValue() + definition.skill().valuePerLevel() * data.skillLevel();
+		return skillValueHearts(definition.skill(), data);
 	}
 
 	public static double secondarySkillValueHearts(WeaponDefinition definition, WeaponData data) {
-		return definition.skill().secondaryBaseValue() + definition.skill().secondaryValuePerLevel() * data.skillLevel();
+		return secondarySkillValueHearts(definition.skill(), data);
 	}
 
 	public static double skillValuePercent(WeaponDefinition definition, WeaponData data) {
-		return definition.skill().baseValue() + definition.skill().valuePerLevel() * data.skillLevel();
+		return skillValuePercent(definition.skill(), data);
 	}
 
 	public static double secondarySkillValuePercent(WeaponDefinition definition, WeaponData data) {
-		return definition.skill().secondaryBaseValue() + definition.skill().secondaryValuePerLevel() * data.skillLevel();
+		return secondarySkillValuePercent(definition.skill(), data);
 	}
 
 	public static double currentHpTrueDamageRatio(WeaponDefinition definition, WeaponData data) {
-		return Math.max(skillValuePercent(definition, data) / 100.0, 0.0);
+		return currentHpTrueDamageRatio(definition.skill(), data);
+	}
+
+	public static double skillValueHearts(WeaponSkillDefinition skill, WeaponData data) {
+		return skillValuePercent(skill, data);
+	}
+
+	public static double secondarySkillValueHearts(WeaponSkillDefinition skill, WeaponData data) {
+		return secondarySkillValuePercent(skill, data);
+	}
+
+	public static double skillValuePercent(WeaponSkillDefinition skill, WeaponData data) {
+		return skill.baseValue() + skill.valuePerLevel() * data.skillLevel();
+	}
+
+	public static double secondarySkillValuePercent(WeaponSkillDefinition skill, WeaponData data) {
+		return skill.secondaryBaseValue() + skill.secondaryValuePerLevel() * data.skillLevel();
+	}
+
+	public static double currentHpTrueDamageRatio(WeaponSkillDefinition skill, WeaponData data) {
+		return Math.max(skillValuePercent(skill, data) / 100.0, 0.0);
 	}
 }

@@ -3,7 +3,8 @@
 	"package": "com.cresora.utilities.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"MinecraftClientMixin"
+		"MinecraftClientMixin",
+		"MinecraftKeybindMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

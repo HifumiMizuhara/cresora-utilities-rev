@@ -39,24 +39,26 @@ public final class WeaponContentRegistry {
 			WeaponStats.CODEC.forGetter(wd -> new WeaponStats(
 					wd.baseAttackDamage(), wd.attackDamagePerLevel(), wd.totalAttackSpeed(),
 					wd.maxBaseLevel(), wd.maxSkillLevel(), wd.critRateBonusPercent(),
-					wd.maxAllDamageBonusPercent(), wd.hpBonusPercent(), wd.damageType(), wd.role())),
+					wd.maxAllDamageBonusPercent(), wd.hpBonusPercent(), wd.damageType(), wd.zone())),
 			WeaponAttackCurvePoint.CODEC.listOf().optionalFieldOf("attackCurve", List.of()).forGetter(WeaponDefinition::attackCurve),
-			WeaponSkillDefinition.CODEC.fieldOf("skill").forGetter(WeaponDefinition::skill),
+			WeaponSkillDefinition.CODEC.listOf().fieldOf("skills").forGetter(WeaponDefinition::skills),
 			WeaponUpgradeDefinition.CODEC.fieldOf("upgrades").forGetter(WeaponDefinition::upgrades),
 			WeaponCraftDefinition.CODEC.fieldOf("craft").forGetter(WeaponDefinition::craft),
 			WeaponDropDefinition.CODEC.fieldOf("drops").forGetter(WeaponDefinition::drops),
 			Codec.INT.optionalFieldOf("custom_model_data").forGetter(wd -> Optional.ofNullable(wd.customModelData())),
 			WeaponSpiritDefinition.CODEC.optionalFieldOf("spirit").forGetter(wd -> Optional.ofNullable(wd.spirit()))
-	).apply(instance, (id, baseItemId, stats, curve, skill, upgrades, craft, drops, modelData, spirit) ->
+	).apply(instance, (id, baseItemId, stats, curve, skills, upgrades, craft, drops, modelData, spirit) ->
 			WeaponDefinition.builder(id, baseItemId,
 							stats.baseAttackDamage(), stats.attackDamagePerLevel(), stats.totalAttackSpeed(),
-							stats.maxBaseLevel(), stats.maxSkillLevel(), skill, upgrades, craft, drops)
+							stats.maxBaseLevel(), stats.maxSkillLevel(),
+							skills.isEmpty() ? WeaponSkillDefinition.NONE : skills.get(0), upgrades, craft, drops)
 					.critRateBonusPercent(stats.critRateBonusPercent())
 					.maxAllDamageBonusPercent(stats.maxAllDamageBonusPercent())
 					.hpBonusPercent(stats.hpBonusPercent())
 					.damageType(stats.damageType())
-					.role(stats.role())
+					.zone(stats.zone())
 					.attackCurve(curve)
+					.skills(skills)
 					.customModelData(modelData.orElse(null))
 					.spirit(spirit.orElse(null))
 					.build()));
@@ -184,12 +186,14 @@ public final class WeaponContentRegistry {
 						WeaponUpgradeDefinition.of(100, 10_000, 1),
 						new WeaponCraftDefinition("rondo_melody_fragment", "minecraft:prismarine_shard", 8, WeaponRarity.TWO_STAR, 1, 1),
 						fragmentFieldDrops())
+				.zone(WeaponZone.SUPPORT)
 				.build());
 		defs.add(WeaponDefinition.builder("masquerade_invitation", "minecraft:wooden_sword", 7.0, 0.18, 1.6, 60, 10,
 						new WeaponSkillDefinition("heal", 0, 30, 2.0, 0.5, 0, 0, 0, 1.0, "harmony"),
 						WeaponUpgradeDefinition.of(100, 10_000, 1),
 						new WeaponCraftDefinition("masquerade_invitation_fragment", "minecraft:amethyst_shard", 8, WeaponRarity.TWO_STAR, 1, 1),
 						fragmentFieldDrops())
+				.zone(WeaponZone.HEAL)
 				.build());
 		defs.add(WeaponDefinition.builder("lakeside_stride", "minecraft:diamond_sword", 7.0, 0.0, 1.6, 60, 10,
 						new WeaponSkillDefinition("current_hp_true_damage", 0, 50, 0.0, 5.0, 5.0, 0, 0, 1.0, "melody"),
@@ -197,6 +201,7 @@ public final class WeaponContentRegistry {
 						new WeaponCraftDefinition("lakeside_stride_fragment", "minecraft:prismarine_crystals", 8, WeaponRarity.FIVE_STAR, 1, 1),
 						resonanceOnlyDrops())
 				.critRateBonusPercent(10.0)
+				.zone(WeaponZone.MAIN_WEAPON)
 				.attackCurve(List.of(new WeaponAttackCurvePoint(1, 7.0), new WeaponAttackCurvePoint(5, 8.0),
 						new WeaponAttackCurvePoint(10, 9.5), new WeaponAttackCurvePoint(30, 13.5),
 						new WeaponAttackCurvePoint(50, 18.0), new WeaponAttackCurvePoint(60, 22.0)))
@@ -207,6 +212,7 @@ public final class WeaponContentRegistry {
 						new WeaponCraftDefinition("hanwu_juanxue_fragment", "minecraft:snowball", 8, WeaponRarity.FIVE_STAR, 1, 1),
 						resonanceOnlyDrops())
 				.damageType(CombatDamageType.ARCANE)
+				.zone(WeaponZone.SUB_WEAPON)
 				.attackCurve(List.of(new WeaponAttackCurvePoint(1, 8.0), new WeaponAttackCurvePoint(5, 9.5),
 						new WeaponAttackCurvePoint(10, 11.0), new WeaponAttackCurvePoint(30, 15.5),
 						new WeaponAttackCurvePoint(50, 21.5), new WeaponAttackCurvePoint(60, 26.0)))
@@ -219,6 +225,7 @@ public final class WeaponContentRegistry {
 				.attackCurve(List.of(new WeaponAttackCurvePoint(1, 8.0), new WeaponAttackCurvePoint(5, 9.0),
 						new WeaponAttackCurvePoint(10, 10.5), new WeaponAttackCurvePoint(30, 14.5),
 						new WeaponAttackCurvePoint(50, 20.0), new WeaponAttackCurvePoint(60, 24.0)))
+				.zone(WeaponZone.SUPPORT)
 				.build());
 		defs.add(WeaponDefinition.builder("requiem_toward_dawn", "minecraft:iron_sword", 8.5, 0.20, 1.6, 60, 10,
 						new WeaponSkillDefinition("flame_aura", 10, 25, 3.0, 1.0, 4.0, 0, 0, 1.0, "harmony"),
@@ -227,12 +234,14 @@ public final class WeaponContentRegistry {
 						resonanceOnlyDrops())
 				.maxAllDamageBonusPercent(10.0)
 				.damageType(CombatDamageType.ARCANE)
+				.zone(WeaponZone.SUPPORT)
 				.build());
 		defs.add(WeaponDefinition.builder("gaoshan_liushui", "minecraft:iron_sword", 8.5, 0.20, 1.6, 60, 10,
 						new WeaponSkillDefinition("healing_aura", 8, 20, 2.0, 0.5, 5.0, 0.75, 0.25, 2.0, "melody"),
 						WeaponUpgradeDefinition.of(100, 10_000, 1),
 						new WeaponCraftDefinition("gaoshan_liushui_fragment", "minecraft:lapis_lazuli", 8, WeaponRarity.FOUR_STAR, 1, 1),
 						resonanceOnlyDrops())
+				.zone(WeaponZone.HEAL)
 				.build());
 		defs.add(WeaponDefinition.builder("dark_lux", "minecraft:netherite_sword", 8.5, 0.20, 1.6, 60, 10,
 						new WeaponSkillDefinition("dark_lux", 30, 30, 0.0, 0.0, 0, 0, 0, 1.0, "bass"),
@@ -240,6 +249,7 @@ public final class WeaponContentRegistry {
 						new WeaponCraftDefinition("dark_lux_fragment", "minecraft:echo_shard", 8, WeaponRarity.FIVE_STAR, 1, 1),
 						resonanceOnlyDrops())
 				.damageType(CombatDamageType.PHYSICAL)
+				.zone(WeaponZone.SUB_WEAPON)
 				.build());
 		defs.add(WeaponDefinition.builder("pastoral_flute_reverie", "minecraft:wooden_sword", 7.0, 0.18, 1.6, 60, 10,
 						new WeaponSkillDefinition("sunlit_haste", 50, 50, 40.0, 0.0, 0, 60.0, 0.0, 1.0, "treble"),
@@ -247,12 +257,14 @@ public final class WeaponContentRegistry {
 						new WeaponCraftDefinition("pastoral_flute_reverie_fragment", "minecraft:bamboo", 8, WeaponRarity.THREE_STAR, 1, 1),
 						resonanceOnlyDrops())
 				.damageType(CombatDamageType.PHYSICAL)
+				.zone(WeaponZone.SUPPORT)
 				.build());
 		defs.add(WeaponDefinition.builder("cadenza_allegro", "minecraft:wooden_sword", 8.5, 0.20, 1.6, 80, 1,
 						new WeaponSkillDefinition("baa_mimic", 0, 15, 1.0, 0.0, 10.0, 0, 0, 1.0, "harmony"),
 						WeaponUpgradeDefinition.of(100, 0, 1),
 						new WeaponCraftDefinition("cadenza_allegro_fragment", "minecraft:white_wool", 8, WeaponRarity.FOUR_STAR, 1, 1),
 						resonanceOnlyDrops())
+				.zone(WeaponZone.SUPPORT)
 				.build());
 		defs.add(WeaponDefinition.builder("dummy_four_star_b", "minecraft:golden_sword", 8.5, 0.20, 1.6, 60, 1,
 						new WeaponSkillDefinition("none", 0, 0, 0.0, 0.0, 0, 0, 0, 1.0, null),

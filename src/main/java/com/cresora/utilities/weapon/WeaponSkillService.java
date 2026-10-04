@@ -38,26 +38,45 @@ public final class WeaponSkillService {
 		});
 	}
 
-	public static InteractionResult tryActivate(ServerPlayer player, ItemStack stack) {
+	public static InteractionResult tryActivate(ServerPlayer player, ItemStack stack, int skillSlot) {
 		WeaponDefinition definition = WeaponStackSupport.getDefinition(stack);
 		if (definition == null) {
 			return InteractionResult.PASS;
 		}
 		WeaponData data = WeaponStackSupport.ensureWeaponData(stack);
-		if (isCoolingDown(player, definition.id())) {
-			player.sendSystemMessage(Component.translatable("item.cresora.weapon.skill.cooldown")
-					.withStyle(ChatFormatting.RED), true);
-			return InteractionResult.FAIL;
-		}
-		if (definition.skill().effectId().equals("none")) {
+		WeaponSkillDefinition skill = definition.skillForSlot(skillSlot);
+		if (skill == null) {
 			player.sendSystemMessage(Component.translatable("item.cresora.weapon.skill.none")
 					.withStyle(ChatFormatting.GRAY), true);
 			return InteractionResult.SUCCESS;
 		}
-		WeaponSkillHandler handler = WeaponSkillRegistry.getHandler(definition.skill().effectId());
-		return handler != null
-				? handler.activate(player, definition, data, WeaponSkillAccess.DUMMY)
-				: InteractionResult.PASS;
+		String cooldownKey = cooldownKey(definition, skill);
+		if (isCoolingDown(player, cooldownKey)) {
+			player.sendSystemMessage(Component.translatable("item.cresora.weapon.skill.cooldown")
+					.withStyle(ChatFormatting.RED), true);
+			return InteractionResult.FAIL;
+		}
+		if (skill.effectId().equals("none")) {
+			player.sendSystemMessage(Component.translatable("item.cresora.weapon.skill.none")
+					.withStyle(ChatFormatting.GRAY), true);
+			return InteractionResult.SUCCESS;
+		}
+		WeaponSkillHandler handler = WeaponSkillRegistry.getHandler(skill.effectId());
+		if (handler == null) {
+			return InteractionResult.PASS;
+		}
+		InteractionResult result = handler.activate(player, definition, skill, data, WeaponSkillAccess.DUMMY);
+		if (result == InteractionResult.SUCCESS) {
+			startCooldown(player, cooldownKey, skill.cooldownSeconds() * 20L);
+			showCooldownBar(player, definition);
+		}
+		return result;
+	}
+
+	/** Cooldowns are tracked per weapon slot so each skill on a weapon cools down independently. */
+	private static String cooldownKey(WeaponDefinition definition, WeaponSkillDefinition skill) {
+		int slot = definition.skills().indexOf(skill);
+		return definition.id() + "#" + Math.max(slot, 0);
 	}
 
 	public static void startCooldown(ServerPlayer player, String weaponId, long durationTicks) {

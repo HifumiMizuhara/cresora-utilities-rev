@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.cresora.utilities.weapon.WeaponContentRegistry;
 import com.cresora.utilities.weapon.WeaponDefinition;
+import com.cresora.utilities.weapon.WeaponSkillDefinition;
 
 /**
  * Maps a skill's {@code effectId} to its handler. Java port of {@code WeaponSkillRegistry.kt}.
@@ -44,8 +45,10 @@ public final class WeaponSkillRegistry {
 
 	public static WeaponDefinition getDefinition(String effectId) {
 		for (WeaponDefinition definition : WeaponContentRegistry.weaponDefinitions()) {
-			if (definition.skill() != null && definition.skill().effectId().equals(effectId)) {
-				return definition;
+			for (WeaponSkillDefinition skill : definition.skills()) {
+				if (skill.effectId().equals(effectId)) {
+					return definition;
+				}
 			}
 		}
 		return null;

@@ -16,6 +16,10 @@ public record WeaponSkillDefinition(
 		double tickIntervalSeconds,
 		String note
 ) {
+	/** Placeholder for a skill slot that has no active effect. */
+	public static final WeaponSkillDefinition NONE = new WeaponSkillDefinition(
+			"none", 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, null);
+
 	public static final Codec<WeaponSkillDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 			Codec.STRING.fieldOf("effectId").forGetter(WeaponSkillDefinition::effectId),
 			Codec.INT.fieldOf("durationSeconds").forGetter(WeaponSkillDefinition::durationSeconds),

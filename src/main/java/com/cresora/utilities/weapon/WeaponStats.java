@@ -16,7 +16,7 @@ public record WeaponStats(
 		double maxAllDamageBonusPercent,
 		double hpBonusPercent,
 		CombatDamageType damageType,
-		WeaponRole role
+		WeaponZone zone
 ) {
 	public static final MapCodec<WeaponStats> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
 			com.mojang.serialization.Codec.DOUBLE.fieldOf("baseAttackDamage").forGetter(WeaponStats::baseAttackDamage),
@@ -28,6 +28,6 @@ public record WeaponStats(
 			com.mojang.serialization.Codec.DOUBLE.optionalFieldOf("maxAllDamageBonusPercent", 0.0).forGetter(WeaponStats::maxAllDamageBonusPercent),
 			com.mojang.serialization.Codec.DOUBLE.optionalFieldOf("hpBonusPercent", 0.0).forGetter(WeaponStats::hpBonusPercent),
 			CombatDamageType.CODEC.optionalFieldOf("damageType", CombatDamageType.PHYSICAL).forGetter(WeaponStats::damageType),
-			WeaponRole.CODEC.optionalFieldOf("role", WeaponRole.GUARD).forGetter(WeaponStats::role)
+			WeaponZone.CODEC.optionalFieldOf("zone", WeaponZone.MAIN_WEAPON).forGetter(WeaponStats::zone)
 	).apply(instance, WeaponStats::new));
 }

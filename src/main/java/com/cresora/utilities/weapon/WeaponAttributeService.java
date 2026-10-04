@@ -30,7 +30,9 @@ public final class WeaponAttributeService {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 				WeaponInventory inventory = WeaponInventoryService.get(player);
-				ItemStack stack = inventory.equipped(inventory.selected());
+				// Normal (left-click) attacks always use the main weapon's stats; the selected slot
+				// only decides which weapon's skill fires, so switching weapons never changes them.
+				ItemStack stack = inventory.equipped(WeaponZone.MAIN_WEAPON.slot());
 				WeaponDefinition definition = WeaponStackSupport.getDefinition(stack);
 				WeaponData data = definition == null ? null : WeaponStackSupport.getWeaponData(stack);
 				boolean armed = definition != null && data != null;

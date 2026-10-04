@@ -23,7 +23,7 @@ public final class WeaponNetwork {
 				context.server().execute(() -> WeaponInventoryService.cycleSelected(context.player())));
 
 		ServerPlayNetworking.registerGlobalReceiver(UseWeaponSkillPayload.TYPE, (payload, context) ->
-				context.server().execute(() -> WeaponInventoryService.activateSelectedSkill(context.player())));
+				context.server().execute(() -> WeaponInventoryService.activateSelectedSkill(context.player(), payload.skillSlot())));
 
 		ServerPlayNetworking.registerGlobalReceiver(WeaponBagActionPayload.TYPE, (payload, context) ->
 				context.server().execute(() -> {

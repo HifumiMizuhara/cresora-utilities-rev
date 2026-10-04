@@ -7,7 +7,7 @@ import com.cresora.utilities.weapon.WeaponData;
 import com.cresora.utilities.weapon.WeaponDefinition;
 import com.cresora.utilities.weapon.WeaponInventory;
 import com.cresora.utilities.weapon.WeaponRarity;
-import com.cresora.utilities.weapon.WeaponRole;
+import com.cresora.utilities.weapon.WeaponZone;
 import com.cresora.utilities.weapon.WeaponStackSupport;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -289,17 +289,17 @@ public final class WeaponBagScreen extends Screen {
 		String weaponName = targetStack.getHoverName().getString();
 		graphics.text(font, weaponName, detailX + 8, originY + 28, rColor, true);
 
-		// 3. Role & Damage Type Pills
+		// 3. Zone & Damage Type Pills
 		int badgeY = originY + 40;
-		WeaponRole role = def.role();
+		WeaponZone zone = def.zone();
 		CombatDamageType dmgType = def.damageType();
-		String roleName = Component.translatable(role.translationKey()).getString();
+		String zoneName = Component.translatable(zone.translationKey()).getString();
 		String dmgTypeName = Component.translatable(dmgType.translationKey()).getString();
-		WeaponUiTheme.drawBadge(graphics, font, roleName, detailX + 8, badgeY,
-				WeaponUiTheme.roleColor(role), 0x30182436, WeaponUiTheme.roleColor(role));
+		WeaponUiTheme.drawBadge(graphics, font, zoneName, detailX + 8, badgeY,
+				WeaponUiTheme.zoneColor(zone), 0x30182436, WeaponUiTheme.zoneColor(zone));
 
-		int roleBadgeW = font.width(roleName) + 10;
-		WeaponUiTheme.drawBadge(graphics, font, dmgTypeName, detailX + 8 + roleBadgeW, badgeY,
+		int zoneBadgeW = font.width(zoneName) + 10;
+		WeaponUiTheme.drawBadge(graphics, font, dmgTypeName, detailX + 8 + zoneBadgeW, badgeY,
 				WeaponUiTheme.damageTypeColor(dmgType), 0x30182436, WeaponUiTheme.damageTypeColor(dmgType));
 
 		// 4. Level & Breakthrough
