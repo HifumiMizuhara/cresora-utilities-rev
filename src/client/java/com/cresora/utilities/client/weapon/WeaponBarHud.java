@@ -18,6 +18,8 @@ import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -42,6 +44,45 @@ public final class WeaponBarHud implements HudElement {
 	private static final int BAR_WIDTH = 28;
 	private static final int HEADER_HEIGHT = 12;
 
+	public static final long DISPLAY_DURATION_MS = 1500L;
+	public static final long FADE_DURATION_MS = 500L;
+
+	private static long lastShowTime = -1L;
+	private static int lastSelected = -1;
+	private static ItemStack lastActiveStack = ItemStack.EMPTY;
+
+	/** Triggers or resets the weapon flyout display timer. */
+	public static void triggerFlyout() {
+		triggerFlyoutAt(Util.getMillis());
+	}
+
+	static void triggerFlyoutAt(long time) {
+		lastShowTime = time;
+	}
+
+	/** Calculates the current flyout opacity (0.0 to 1.0) based on time elapsed since appearance. */
+	public static float getFlyoutAlpha(long currentTime) {
+		if (lastShowTime < 0) {
+			return 0.0f;
+		}
+		long elapsed = currentTime - lastShowTime;
+		if (elapsed < 0 || elapsed >= DISPLAY_DURATION_MS + FADE_DURATION_MS) {
+			return 0.0f;
+		}
+		if (elapsed <= DISPLAY_DURATION_MS) {
+			return 1.0f;
+		}
+		float progress = (float) (elapsed - DISPLAY_DURATION_MS) / (float) FADE_DURATION_MS;
+		return Math.clamp(1.0f - progress, 0.0f, 1.0f);
+	}
+
+	/** Resets cached HUD state (useful for tests or re-joining worlds). */
+	public static void resetState() {
+		lastShowTime = -1L;
+		lastSelected = -1;
+		lastActiveStack = ItemStack.EMPTY;
+	}
+
 	@Override
 	public void extractRenderState(GuiGraphicsExtractor graphics, DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
@@ -51,6 +92,17 @@ public final class WeaponBarHud implements HudElement {
 
 		WeaponInventory inventory = WeaponSlots.inventory();
 		int selected = inventory.selected();
+		ItemStack activeStack = inventory.equipped(selected);
+
+		if (lastSelected == -1) {
+			lastSelected = selected;
+			lastActiveStack = activeStack.copy();
+		} else if (selected != lastSelected || !ItemStack.matches(activeStack, lastActiveStack)) {
+			lastSelected = selected;
+			lastActiveStack = activeStack.copy();
+			triggerFlyout();
+		}
+
 		int totalSlots = WeaponSlots.SLOT_COUNT;
 		int barHeight = HEADER_HEIGHT + 4 + totalSlots * (SLOT_SIZE + SLOT_GAP) + 1;
 
@@ -102,11 +154,15 @@ public final class WeaponBarHud implements HudElement {
 		}
 
 		// 3. Floating readout flyout beside the active slot
+		float alpha = getFlyoutAlpha(Util.getMillis());
+		if (alpha <= 0.001f) {
+			return;
+		}
+
 		int activeSlotY = MARGIN + HEADER_HEIGHT + 2 + selected * (SLOT_SIZE + SLOT_GAP);
 		int flyoutX = MARGIN + BAR_WIDTH + 4;
 		int flyoutY = activeSlotY - 2;
 
-		ItemStack activeStack = inventory.equipped(selected);
 		WeaponDefinition activeDef = WeaponStackSupport.getDefinition(activeStack);
 		WeaponData activeData = (activeDef != null && !activeStack.isEmpty()) ? WeaponStackSupport.getWeaponData(activeStack) : null;
 
@@ -114,9 +170,18 @@ public final class WeaponBarHud implements HudElement {
 		String zoneName = selectedZone == null ? "" : net.minecraft.network.chat.Component.translatable(selectedZone.translationKey()).getString();
 		int zoneColor = WeaponUiTheme.zoneColor(selectedZone);
 
+		int bgTop = ARGB.multiplyAlpha(0xD80A0D15, alpha);
+		int bgBottom = ARGB.multiplyAlpha(0xE80F1522, alpha);
+		int border = ARGB.multiplyAlpha(0x702A364E, alpha);
+
 		if (!activeStack.isEmpty() && activeData != null) {
 			WeaponRarity activeRarity = activeData.rarity();
 			int rColor = WeaponUiTheme.rarityColor(activeRarity);
+			int stripeColor = ARGB.multiplyAlpha(rColor, alpha);
+			int titleColor = ARGB.multiplyAlpha(rColor, alpha);
+			int subColor = ARGB.multiplyAlpha(0xFF94A3B8, alpha);
+			int skillColor = ARGB.multiplyAlpha(WeaponUiTheme.ACCENT_CYAN, alpha);
+
 			String titleText = activeStack.getHoverName().getString();
 
 			boolean inCombat = CombatStateClient.isInCombat(minecraft.player);
@@ -142,16 +207,16 @@ public final class WeaponBarHud implements HudElement {
 			}
 			int flyoutW = Math.max(120, textW + 14);
 
-			graphics.fillGradient(flyoutX, flyoutY, flyoutX + flyoutW, flyoutY + flyoutH, 0xD80A0D15, 0xE80F1522);
-			graphics.outline(flyoutX, flyoutY, flyoutW, flyoutH, 0x702A364E);
-			graphics.fill(flyoutX, flyoutY, flyoutX + 2, flyoutY + flyoutH, rColor);
+			graphics.fillGradient(flyoutX, flyoutY, flyoutX + flyoutW, flyoutY + flyoutH, bgTop, bgBottom);
+			graphics.outline(flyoutX, flyoutY, flyoutW, flyoutH, border);
+			graphics.fill(flyoutX, flyoutY, flyoutX + 2, flyoutY + flyoutH, stripeColor);
 
-			graphics.text(minecraft.font, titleText, flyoutX + 6, flyoutY + 4, rColor, true);
-			graphics.text(minecraft.font, subText, flyoutX + 6, flyoutY + 14, 0xFF94A3B8, true);
+			graphics.text(minecraft.font, titleText, flyoutX + 6, flyoutY + 4, titleColor, true);
+			graphics.text(minecraft.font, subText, flyoutX + 6, flyoutY + 14, subColor, true);
 
 			int skillLineY = flyoutY + 25;
 			for (String line : skillLines) {
-				graphics.text(minecraft.font, line, flyoutX + 6, skillLineY, WeaponUiTheme.ACCENT_CYAN, false);
+				graphics.text(minecraft.font, line, flyoutX + 6, skillLineY, skillColor, false);
 				skillLineY += 10;
 			}
 		} else {
@@ -161,12 +226,16 @@ public final class WeaponBarHud implements HudElement {
 			int textW = Math.max(minecraft.font.width(emptyTitle), minecraft.font.width(openBagHint));
 			int flyoutW = Math.max(90, textW + 14);
 
-			graphics.fillGradient(flyoutX, flyoutY, flyoutX + flyoutW, flyoutY + flyoutH, 0xD80A0D15, 0xE80F1522);
-			graphics.outline(flyoutX, flyoutY, flyoutW, flyoutH, 0x702A364E);
-			graphics.fill(flyoutX, flyoutY, flyoutX + 2, flyoutY + flyoutH, zoneColor);
+			int stripeColor = ARGB.multiplyAlpha(zoneColor, alpha);
+			int titleColor = ARGB.multiplyAlpha(zoneColor, alpha);
+			int hintColor = ARGB.multiplyAlpha(0xFF64748B, alpha);
 
-			graphics.text(minecraft.font, emptyTitle, flyoutX + 6, flyoutY + 4, zoneColor, true);
-			graphics.text(minecraft.font, openBagHint, flyoutX + 6, flyoutY + 14, 0xFF64748B, true);
+			graphics.fillGradient(flyoutX, flyoutY, flyoutX + flyoutW, flyoutY + flyoutH, bgTop, bgBottom);
+			graphics.outline(flyoutX, flyoutY, flyoutW, flyoutH, border);
+			graphics.fill(flyoutX, flyoutY, flyoutX + 2, flyoutY + flyoutH, stripeColor);
+
+			graphics.text(minecraft.font, emptyTitle, flyoutX + 6, flyoutY + 4, titleColor, true);
+			graphics.text(minecraft.font, openBagHint, flyoutX + 6, flyoutY + 14, hintColor, true);
 		}
 	}
 }

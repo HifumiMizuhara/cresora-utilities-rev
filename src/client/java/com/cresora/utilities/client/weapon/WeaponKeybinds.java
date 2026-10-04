@@ -62,11 +62,13 @@ public final class WeaponKeybinds {
 			while (CYCLE_SLOT.consumeClick()) {
 				if (client.player != null) {
 					ClientPlayNetworking.send(new CycleWeaponSlotPayload());
+					WeaponBarHud.triggerFlyout();
 				}
 			}
 			while (TOGGLE_COMBAT.consumeClick()) {
 				if (client.player != null) {
 					ClientPlayNetworking.send(new ToggleCombatPayload());
+					WeaponBarHud.triggerFlyout();
 				}
 			}
 			handleSkillKey(client, SKILL_1, 0);

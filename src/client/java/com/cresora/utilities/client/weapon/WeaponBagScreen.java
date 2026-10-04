@@ -385,6 +385,7 @@ public final class WeaponBagScreen extends Screen {
 		if (equipIndex >= 0) {
 			if (event.button() == 1) {
 				ClientPlayNetworking.send(new WeaponBagActionPayload(WeaponBagActionPayload.SELECT, equipIndex));
+				WeaponBarHud.triggerFlyout();
 			} else if (event.button() == 0 && !WeaponSlots.get(equipIndex).isEmpty()) {
 				ClientPlayNetworking.send(new WeaponBagActionPayload(WeaponBagActionPayload.UNEQUIP, equipIndex));
 			}

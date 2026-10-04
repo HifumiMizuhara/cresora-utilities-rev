@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.cresora.utilities.client.combat.CombatStateClient;
+import com.cresora.utilities.client.weapon.WeaponBarHud;
 import com.cresora.utilities.net.SelectWeaponSlotPayload;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -45,6 +46,7 @@ public class MinecraftKeybindMixin {
 			}
 			if (pressed) {
 				ClientPlayNetworking.send(new SelectWeaponSlotPayload(slot));
+				WeaponBarHud.triggerFlyout();
 			}
 		}
 
