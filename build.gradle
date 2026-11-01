@@ -46,7 +46,7 @@ sourceSets {
 }
 
 dependencies {
-	compilerImplementation 'com.google.code.gson:gson:2.11.0'
+	compilerImplementation 'com.google.code.gson:gson:2.15.0'
 	compilerTestImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
 	compilerTestRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
